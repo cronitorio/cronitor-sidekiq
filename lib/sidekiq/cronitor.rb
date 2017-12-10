@@ -48,12 +48,11 @@ module Sidekiq::Cronitor
       # Default monitor name to sidekiq worker (class) name
       kwargs[:opts][:name] ||= name
 
-      # If we're using Sidekiq::Cron and there's a job for this class then use
-      # it's cron schedule for a default not_on_schedudle rule, and tag this as
-      # a cron job
-      if defined?(Sidekiq::Cron) && job = Sidekiq::Cron::Job.all.find { |j| j.klass == name }
+      # If we can find a schedule for this worker then we can automatically add
+      # a not_on_schedule rule and tag as a cron job
+      if schedule = cronitor_schedule
         kwargs[:opts][:rules] ||= [{rule_type: "not_on_schedule", value: job.cron}]
-        kwargs[:opts][:tags] ||= ["cron-job", "sidekiq-cron", "sidekiq-cronitor"]
+        kwargs[:opts][:tags] ||= ["cron-job", "sidekiq-cronitor"]
       end
 
       # Some hints about where this monitor came from
@@ -67,6 +66,31 @@ module Sidekiq::Cronitor
 
         @cronitor = nil
       end
+    end
+
+    private def cronitor_schedule
+      name = self.name
+
+      if defined?(Sidekiq::Cron)
+        # If we can find a Sidekiq::Cron job with a matching worker class
+        # then presume its schedule.
+        Sidekiq::Cron::Job.all.each do |job|
+          if job.klass == name
+            return job.cron
+          end
+        end
+      elsif defined?(Sidekiq::Periodic)
+        # If we can find a Sidekiq Enterprise Periodic Loop with a matching
+        # worker class then presume its schedule.
+        Sidekiq::Periodic::LoopSet.new.each do |loop_|
+          if loop_.klass == name
+            return loop_.schedule
+          end
+        end
+      end
+
+      # ¯\_(ツ)_/¯
+      return nil
     end
   end
 
