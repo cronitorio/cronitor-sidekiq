@@ -48,16 +48,20 @@ module Sidekiq::Cronitor
       # Default monitor name to sidekiq worker (class) name
       kwargs[:opts][:name] ||= name
 
-      # If we can find a schedule for this worker then we can automatically add
-      # a not_on_schedule rule and tag as a cron job
-      if schedule = cronitor_schedule
-        kwargs[:opts][:rules] ||= [{rule_type: "not_on_schedule", value: job.cron}]
-        kwargs[:opts][:tags] ||= ["cron-job", "sidekiq-cronitor"]
-      end
-
       # Some hints about where this monitor came from
-      kwargs[:opts][:tags] ||= ["sidekiq-cronitor"]
+      kwargs[:opts][:tags] ||= []
+      kwargs[:opts][:tags] << "sidekiq-cronitor"
+      if environment = ENV["RAILS_ENV"] || ENV["RACK_ENV"] || Sidekiq.options[:environment]
+        kwargs[:opts][:tags] << environment
+      end
       kwargs[:opts][:note] ||= "Created by sidekiq-cronitor"
+
+      # If we can find a schedule for this worker then we can automatically add
+      # a not_on_schedule rule and tag it as a cron-job
+      if schedule = cronitor_schedule
+        kwargs[:opts][:rules] ||= [{rule_type: "not_on_schedule", value: schedule}]
+        kwargs[:opts][:tags] << "cron-job"
+      end
 
       begin
         @cronitor = Cronitor.new(**kwargs)
