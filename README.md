@@ -74,7 +74,7 @@ end
 
 For more information on what rules you can use take a look at the [Cronitor Monitors API docs](https://cronitor.io/docs/monitor-api).
 
-If you're using [sidekiq-cron](https://github.com/ondrejbartas/sidekiq-cron) the missing monitor will have a default `not_on_schedule` rule based on the cron schedule matched by you worker class.
+If you're using [sidekiq-cron](https://github.com/ondrejbartas/sidekiq-cron) or [Sidekiq Enterprise periodic jobs](https://github.com/mperham/sidekiq/wiki/Ent-Periodic-Jobs) then the missing monitor will have a default `not_on_schedule` rule based on the schedule matched by you worker class.
 
 You can also just supply a Cronitor instance to use directly:
 
