@@ -46,7 +46,7 @@ class MyWorker
   include Sidekiq::Worker
   include Sidekiq::Cronitor
 
-  sidekiq_options cronitor: {code: "abc123"}
+  sidekiq_options cronitor: {code: "abc123"}, # you can also pass `token: XXX` to use a different token than the default (env) CRONITOR token
 
   def perform
     # ...
