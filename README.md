@@ -13,15 +13,17 @@ gem "sidekiq-cronitor"
 
 And then bundle:
 
-    $ bundle
+```
+bundle
+```
 
 ## Usage
 
-Make sure you've got a Cronitor [API Key](https://cronitor.io/docs/api-overview) from [your settings](https://cronitor.io/settings) in your ENV as `$CRONITOR_TOKEN` before starting Sidekiq:
+Make sure you've got a Cronitor [API Key](https://cronitor.io/docs/api-overview) from [your settings](https://cronitor.io/settings) in your ENV as `$CRONITOR_API_KEY` before starting Sidekiq:
 
 ```sh
-export CRONITOR_TOKEN="abcdef1234567890abcdef1234567890"
-sidekiq
+export CRONITOR_API_KEY="abcdef1234567890abcdef1234567890"
+bundle exec sidekiq
 ```
 
 Any sidekiq worker you'd like to monitor just includes `Sidekiq::Cronitor` right after `Sidekiq::Worker`:
@@ -37,53 +39,16 @@ class MyWorker
 end
 ```
 
-By default this will look for an existing monitor named after your worker, `MyWorker` in the case above, and pings that. Otherwise it will try to create a new monitor with the name.
+By default this will look for an existing monitor named after your worker, `MyWorker` in the case above, and pings that. Otherwise it will try to create a new monitor with the worker's name.
 
-To use a monitor you've already created you can also configure a code directly:
-
-```ruby
-class MyWorker
-  include Sidekiq::Worker
-  include Sidekiq::Cronitor
-
-  sidekiq_options cronitor: {code: "abc123"}, # you can also pass `token: XXX` to use a different token than the default (env) CRONITOR token
-
-  def perform
-    # ...
-  end
-end
-```
-
-To use a different name or customise how a missing monitor will be created you can use a sidekiq option named `cronitor`:
+To use a monitor you've already created you can also configure a `key` directly:
 
 ```ruby
 class MyWorker
   include Sidekiq::Worker
   include Sidekiq::Cronitor
 
-  sidekiq_options cronitor: {
-    name: "Some Monitor",
-    rules: [{rule_type: "ran_longer_than", value: 60, time_unit: "seconds"}]
-  }
-
-  def perform
-    # ...
-  end
-end
-```
-
-For more information on what rules you can use take a look at the [Cronitor Monitors API docs](https://cronitor.io/docs/monitor-api).
-
-If you're using [sidekiq-cron](https://github.com/ondrejbartas/sidekiq-cron) or [Sidekiq Enterprise periodic jobs](https://github.com/mperham/sidekiq/wiki/Ent-Periodic-Jobs) then the missing monitor will have a default `not_on_schedule` rule based on the schedule matched by you worker class.
-
-You can also just supply a Cronitor instance to use directly:
-
-```ruby
-class MyWorker
-  include Sidekiq::Worker
-  include Sidekiq::Cronitor
-
-  sidekiq_options cronitor: Cronitor.new(...)
+  sidekiq_options cronitor: { key: 'abc123' }
 
   def perform
     # ...
