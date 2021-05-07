@@ -7,8 +7,8 @@ Call a [Cronitor](https://cronitor.io) around your [Sidekiq](https://sidekiq.org
 Add sidekiq-cronitor your application's Gemfile, near sidekiq:
 
 ```ruby
-gem "sidekiq"
-gem "sidekiq-cronitor"
+gem 'sidekiq'
+gem 'sidekiq-cronitor'
 ```
 
 And then bundle:
@@ -19,10 +19,10 @@ bundle
 
 ## Usage
 
-Make sure you've got a Cronitor [API Key](https://cronitor.io/docs/api-overview) from [your settings](https://cronitor.io/settings) in your ENV as `$CRONITOR_API_KEY` before starting Sidekiq:
+Make sure you've got a Cronitor [API Key](https://cronitor.io/docs/api-overview) from [your settings](https://cronitor.io/settings) in your ENV as `CRONITOR_API_KEY` before starting Sidekiq:
 
 ```sh
-export CRONITOR_API_KEY="abcdef1234567890abcdef1234567890"
+export CRONITOR_API_KEY='abcdef1234567890abcdef1234567890'
 bundle exec sidekiq
 ```
 
@@ -39,9 +39,9 @@ class MyWorker
 end
 ```
 
-By default this will look for an existing monitor named after your worker, `MyWorker` in the case above, and pings that. Otherwise it will try to create a new monitor with the worker's name.
+By default this will look for an existing monitor named after your worker, `MyWorker` in the case above, and pings that. Otherwise it will try to create a new monitor with the worker's name, which you can configure rules for at a later time via your Cronitor dashboard.
 
-To use a monitor you've already created you can also configure a `key` directly:
+To use a monitor you've already created, you can configure the monitor's `key` directly:
 
 ```ruby
 class MyWorker
