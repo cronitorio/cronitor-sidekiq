@@ -1,25 +1,20 @@
-require "sidekiq"
-require "cronitor"
+require 'sidekiq'
+require 'cronitor'
 
-require "sidekiq/cronitor/version"
+require 'sidekiq/cronitor/version'
 
 module Sidekiq::Cronitor
   def self.included(base)
-    unless base.ancestors.include? Sidekiq::Worker
-      raise ArgumentError, "Sidekiq::Cronitor can only be included in a Sidekiq::Worker"
+    unless base.ancestors.include?(Sidekiq::Worker)
+      raise ArgumentError, 'Sidekiq::Cronitor can only be included in a Sidekiq::Worker'
     end
 
     base.extend(ClassMethods)
 
     # Automatically add sidekiq middleware when we're first included
-    #
-    # This might only occur when the worker class is first loaded in a
-    # development rails environment, but that happens before the middleware
-    # chain is invoked so we're all good.
-    #
     Sidekiq.configure_server do |config|
-      unless config.server_middleware.exists? Sidekiq::Cronitor::Middleware
-        config.server_middleware.add Sidekiq::Cronitor::Middleware
+      unless config.server_middleware.exists?(Sidekiq::Cronitor::Middleware)
+        config.server_middleware.add(Sidekiq::Cronitor::Middleware)
       end
     end
   end
@@ -30,110 +25,53 @@ module Sidekiq::Cronitor
 
   module ClassMethods
     def cronitor
-      return @cronitor if defined? @cronitor
+      return @cronitor if defined?(@cronitor)
 
-      # Sidekiq always stores options as string keys, shallowly at least
-      opts = sidekiq_options.fetch("cronitor", {})
+      opts = sidekiq_options.fetch('cronitor', {})
+      key = opts.symbolize_keys.fetch(:key, name)
 
-      if opts.is_a? Cronitor
-        return @cronitor = opts
-      end
-
-      # Cronitor (and our code below) expects deeply symbolized keys
-      opts = Utils.deep_symbolize_keys(opts)
-
-      # Extract token and code into top level kwargs
-      kwargs = opts.slice(:token, :code).merge(opts: opts)
-
-      # Default monitor name to sidekiq worker (class) name
-      kwargs[:opts][:name] ||= name
-
-      # Some hints about where this monitor came from
-      kwargs[:opts][:tags] ||= []
-      kwargs[:opts][:tags] << "sidekiq-cronitor"
-      if environment = ENV["RAILS_ENV"] || ENV["RACK_ENV"] || Sidekiq.options[:environment]
-        kwargs[:opts][:tags] << environment
-      end
-      kwargs[:opts][:note] ||= "Created by sidekiq-cronitor"
-
-      # If we can find a schedule for this worker then we can automatically add
-      # a not_on_schedule rule and tag it as a cron-job
-      if schedule = cronitor_schedule
-        kwargs[:opts][:rules] ||= [{rule_type: "not_on_schedule", value: schedule}]
-        kwargs[:opts][:tags] << "cron-job"
-      end
+      Sidekiq.logger.debug("[cronitor] initializing monitor: worker=#{name} key=#{key}")
 
       begin
-        @cronitor = Cronitor.new(**kwargs)
+        @cronitor = Cronitor::Monitor.new(key)
       rescue Cronitor::Error => e
-        Sidekiq.logger.warn "Couldn't initialize Cronitor: #{e.to_s}"
+        Sidekiq.logger.error("[cronitor] failed to initialize monitor: worker=#{name} error=#{e.message}")
 
         @cronitor = nil
       end
-    end
-
-    private def cronitor_schedule
-      name = self.name
-
-      if defined?(Sidekiq::Cron)
-        # If we can find a Sidekiq::Cron job with a matching worker class
-        # then presume its schedule.
-        Sidekiq::Cron::Job.all.each do |job|
-          if job.klass == name
-            return job.cron
-          end
-        end
-      elsif defined?(Sidekiq::Periodic)
-        # If we can find a Sidekiq Enterprise Periodic Loop with a matching
-        # worker class then presume its schedule.
-        Sidekiq::Periodic::LoopSet.new.each do |loop_|
-          if loop_.klass == name
-            return loop_.schedule
-          end
-        end
-      end
-
-      # ¯\_(ツ)_/¯
-      return nil
     end
   end
 
   class Middleware
     def call(worker, message, queue)
-      begin
-        ping worker, "run"
+      ping(worker: worker, state: 'run')
 
-        yield
-      rescue => e
-        ping worker, "failed", e.to_s
+      yield
+    rescue => e
+      ping(worker: worker, state: 'fail', message: e.to_s)
 
-        raise
-      else
-        ping worker, "complete"
-      end
+      raise e
+    else
+      ping(worker: worker, state: 'complete')
     end
 
     private
 
-    def ping(worker, type, msg=nil)
-      if cronitor? worker
-        Sidekiq.logger.debug "Cronitor ping: #{type}"
-        worker.cronitor.ping(type)
-      end
+    def ping(worker:, state:, message: nil)
+      return unless has_cronitor?(worker)
+
+      Sidekiq.logger.debug("[cronitor] ping: worker=#{worker.class.name} state=#{state} message=#{message}")
+
+      worker.cronitor.ping(state: state)
     rescue Cronitor::Error => e
-      Sidekiq.logger.warn "Couldn't ping Cronitor: #{e.to_s}"
+      Sidekiq.logger.error("[cronitor] error during ping: worker=#{worker.class.name} error=#{e.message}")
+    rescue => e
+      Sidekiq.logger.error("[cronitor] unexpected error: worker=#{worker.class.name} error=#{e.message}")
+      Sidekiq.logger.error(e.backtrace.first)
     end
 
-    def cronitor? worker
-      worker.is_a?(Sidekiq::Cronitor) && worker.cronitor
-    end
-  end
-
-  module Utils
-    def self.deep_symbolize_keys(hash) #+nodoc+
-      hash.each_with_object({}) do |(key, value), new_hash|
-        new_hash[key.to_sym] = value.is_a?(Hash) ? deep_symbolize_keys(value) : value
-      end
+    def has_cronitor?(worker)
+      worker.is_a?(Sidekiq::Cronitor) && worker.respond_to?(:cronitor) && !worker.cronitor.api_key.nil?
     end
   end
 end
