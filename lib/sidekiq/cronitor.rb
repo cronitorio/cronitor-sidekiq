@@ -1,5 +1,5 @@
-require "sidekiq"
-require "cronitor"
+require 'sidekiq'
+require 'cronitor'
 
 require 'sidekiq/cronitor/version'
 
@@ -48,7 +48,7 @@ module Sidekiq::Cronitor
 
       yield
     rescue => e
-      ping(worker: worker, state: 'failed', message: e.to_s)
+      ping(worker: worker, state: 'fail', message: e.to_s)
 
       raise e
     else
