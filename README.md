@@ -28,7 +28,7 @@ bundle exec sidekiq
 ```
 
 Or declare the API key directly on the Cronitor module from within your application (e.g. the Sidekiq initializer).
-```
+```ruby
 require 'cronitor'
 Cronitor.api_key = 'api_key_123'
 Cronitor.environment = 'development' #default: 'production'
