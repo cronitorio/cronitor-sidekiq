@@ -19,10 +19,11 @@ bundle
 
 ## Usage
 
-Configure `sidekiq-cronitor` with an [API Key](https://cronitor.io/docs/api-overview) from [your settings](https://cronitor.io/settings). You can either set the `CRONITOR_API_KEY` ENV variable before starting Sidekiq:
+Configure `sidekiq-cronitor` with an [API Key](https://cronitor.io/docs/api-overview) from [your settings](https://cronitor.io/settings). You can use ENV variables to configure Cronitor:
 
 ```sh
 export CRONITOR_API_KEY='api_key_123'
+export CRONITOR_ENVIRONMENT='development' #default: 'production'
 bundle exec sidekiq
 ```
 
@@ -30,6 +31,7 @@ Or declare the API key directly on the Cronitor module from within your applicat
 ```
 require 'cronitor'
 Cronitor.api_key = 'api_key_123'
+Cronitor.environment = 'development' #default: 'production'
 ```
 
 
