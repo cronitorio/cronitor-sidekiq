@@ -1,6 +1,6 @@
 # Sidekiq Cronitor
 
-Call a [Cronitor](https://cronitor.io) around your [Sidekiq](https://sidekiq.org) jobs.
+[Cronitor](https://cronitor.io/) provides dead simple monitoring for cron jobs, daemons, queue workers, websites, APIs, and anything else that can send or receive an HTTP request. The Cronitor Sidekiq library provides a drop in integration for monitoring any Sidekiq Worker.
 
 ## Installation
 
@@ -19,14 +19,21 @@ bundle
 
 ## Usage
 
-Make sure you've got a Cronitor [API Key](https://cronitor.io/docs/api-overview) from [your settings](https://cronitor.io/settings) in your ENV as `CRONITOR_API_KEY` before starting Sidekiq:
+Configure `sidekiq-cronitor` with an [API Key](https://cronitor.io/docs/api-overview) from [your settings](https://cronitor.io/settings). You can either set the `CRONITOR_API_KEY` ENV variable before starting Sidekiq:
 
 ```sh
-export CRONITOR_API_KEY='abcdef1234567890abcdef1234567890'
+export CRONITOR_API_KEY='api_key_123'
 bundle exec sidekiq
 ```
 
-Any sidekiq worker you'd like to monitor just includes `Sidekiq::Cronitor` right after `Sidekiq::Worker`:
+Or declare the API key directly on the Cronitor module from within your application (e.g. the Sidekiq initializer).
+```
+require 'cronitor'
+Cronitor.api_key = 'api_key_123'
+```
+
+
+To monitor a worker include `Sidekiq::Cronitor` right after `Sidekiq::Worker`:
 
 ```ruby
 class MyWorker
@@ -39,9 +46,9 @@ class MyWorker
 end
 ```
 
-By default this will look for an existing monitor named after your worker, `MyWorker` in the case above, and pings that. Otherwise it will try to create a new monitor with the worker's name, which you can configure rules for at a later time via your Cronitor dashboard.
+When this worker is invoked, Cronitor will send telemetry pings with a  `key` matching the name of your worker (`MyWorker` in the case above). If no monitor exists it will create one on the first event. You can configure rules at a later time via the Cronitor dashboard, API, or [YAML config](https://github.com/cronitorio/cronitor-ruby#configuring-monitors) file.
 
-To use a monitor you've already created, you can configure the monitor's `key` directly:
+To specify a `key` directly include it using `sidekiq_options`:
 
 ```ruby
 class MyWorker
