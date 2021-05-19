@@ -24,6 +24,7 @@ Configure `sidekiq-cronitor` with an [API Key](https://cronitor.io/docs/api-over
 ```sh
 export CRONITOR_API_KEY='api_key_123'
 export CRONITOR_ENVIRONMENT='development' #default: 'production'
+
 bundle exec sidekiq
 ```
 
