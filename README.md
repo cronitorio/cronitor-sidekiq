@@ -1,6 +1,9 @@
 # Sidekiq Cronitor
 
-[Cronitor](https://cronitor.io/) provides dead simple monitoring for cron jobs, daemons, queue workers, websites, APIs, and anything else that can send or receive an HTTP request. The Cronitor Sidekiq library provides a drop in integration for monitoring any Sidekiq Worker.
+[Cronitor](https://cronitor.io/) provides dead simple monitoring for cron jobs, daemons, queue workers, websites, APIs, and anything else that can send or receive an HTTP request. The Cronitor Sidekiq library provides a drop in integration for monitoring any Sidekiq Job.
+
+
+#### NOTE: Version 3.0.0 changes the integration method from 2.x.x. This is a breaking change. You now add the middleware in the Sidekiq initializer. You can opt of out telemetry for specific jobs with a sidekiq_options (see below)
 
 ## Installation
 
@@ -29,6 +32,7 @@ bundle exec sidekiq
 ```
 
 Or declare the API key directly on the Cronitor module from within your application (e.g. the Sidekiq initializer).
+
 ```ruby
 require 'cronitor'
 Cronitor.api_key = 'api_key_123'
@@ -36,32 +40,44 @@ Cronitor.environment = 'development' #default: 'production'
 ```
 
 
-To monitor a worker include `Sidekiq::Cronitor` right after `Sidekiq::Worker`:
+To monitor jobs insert the server middleware (most people do this in the Sidekiq initializer)
 
 ```ruby
-class MyWorker
-  include Sidekiq::Worker
-  include Sidekiq::Cronitor
-
-  def perform
-    # ...
+Sidekiq.configure_server do |config|
+  config.server_middleware do |chain|
+    chain.add Sidekiq::Cronitor::ServerMiddleware
   end
 end
 ```
 
-When this worker is invoked, Cronitor will send telemetry pings with a  `key` matching the name of your worker (`MyWorker` in the case above). If no monitor exists it will create one on the first event. You can configure rules at a later time via the Cronitor dashboard, API, or [YAML config](https://github.com/cronitorio/cronitor-ruby#configuring-monitors) file.
 
-To specify a `key` directly include it using `sidekiq_options`:
+When this job is invoked, Cronitor will send telemetry pings with a `key` matching the name of your job class (`MyJob` in the example below). If no monitor exists it will create one on the first event. You can configure rules at a later time via the Cronitor dashboard, API, or [YAML config](https://github.com/cronitorio/cronitor-ruby#configuring-monitors) file.
+
+If you want to specify the Cronitor key directly (not required) you can do so using `sidekiq_options`:
 
 ```ruby
-class MyWorker
-  include Sidekiq::Worker
-  include Sidekiq::Cronitor
+class MyJob
+  include Sidekiq::Job
 
+  # note that 'key' should be set with a symbol as the key in the hash
   sidekiq_options cronitor: { key: 'abc123' }
 
   def perform
-    # ...
+  end
+end
+```
+
+
+To disable Cronitor for a specific job you can set the following option:
+
+```ruby
+class MyJob
+  include Sidekiq::MyJob
+
+  # note that 'disabled' should be set with a symbol as the key in the hash
+  sidekiq_options cronitor: { disabled: true }
+
+  def perform
   end
 end
 ```
