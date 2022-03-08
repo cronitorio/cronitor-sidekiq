@@ -53,7 +53,7 @@ end
 
 When this job is invoked, Cronitor will send telemetry pings with a `key` matching the name of your job class (`MyJob` in the example below). If no monitor exists it will create one on the first event. You can configure rules at a later time via the Cronitor dashboard, API, or [YAML config](https://github.com/cronitorio/cronitor-ruby#configuring-monitors) file.
 
-If you want to specify the Cronitor key directly (not required) you can do so using `sidekiq_options`:
+Optional: You can specify the monitor key directly using `sidekiq_options`:
 
 ```ruby
 class MyJob
@@ -72,7 +72,7 @@ To disable Cronitor for a specific job you can set the following option:
 
 ```ruby
 class MyJob
-  include Sidekiq::MyJob
+  include Sidekiq::Job
 
   # note that 'disabled' should be set with a symbol as the key in the hash
   sidekiq_options cronitor: { disabled: true }
