@@ -4,74 +4,55 @@ require 'cronitor'
 require 'sidekiq/cronitor/version'
 
 module Sidekiq::Cronitor
-  def self.included(base)
-    unless base.ancestors.include?(Sidekiq::Worker)
-      raise ArgumentError, 'Sidekiq::Cronitor can only be included in a Sidekiq::Worker'
-    end
-
-    base.extend(ClassMethods)
-
-    # Automatically add sidekiq middleware when we're first included
-    Sidekiq.configure_server do |config|
-      unless config.server_middleware.exists?(Sidekiq::Cronitor::Middleware)
-        config.server_middleware.add(Sidekiq::Cronitor::Middleware)
-      end
-    end
-  end
-
-  def cronitor
-    self.class.cronitor
-  end
-
-  module ClassMethods
-    def cronitor
-      return @cronitor if defined?(@cronitor)
-
-      opts = sidekiq_options.fetch('cronitor', {})
-      key = opts.symbolize_keys.fetch(:key, name)
-
-      Sidekiq.logger.debug("[cronitor] initializing monitor: worker=#{name} key=#{key}")
-
-      begin
-        @cronitor = Cronitor::Monitor.new(key)
-      rescue Cronitor::Error => e
-        Sidekiq.logger.error("[cronitor] failed to initialize monitor: worker=#{name} error=#{e.message}")
-
-        @cronitor = nil
-      end
-    end
-  end
-
-  class Middleware
+  class ServerMiddleware
     def call(worker, message, queue)
       ping(worker: worker, state: 'run')
 
-      yield
+      result = yield
     rescue => e
       ping(worker: worker, state: 'fail', message: e.to_s)
 
       raise e
     else
       ping(worker: worker, state: 'complete')
+      result # to be consistent with client middleware, return results of yield
     end
 
     private
+    def cronitor(worker)
+      Cronitor::Monitor.new(job_key(worker))
+    end
+
+    def cronitor_disabled?(worker)
+      options(worker).fetch(:disabled, false)
+    end
+
+    def job_key(worker)
+      options(worker).fetch(:key, worker.class.name)
+    end
+
+    def options(worker)
+      opts = worker.class.sidekiq_options.fetch('cronitor', {})
+      # symbolize_keys is a rails helper, so only use it if it's defined
+      opts = opts.symbolize_keys if opts.respond_to?(:symbolize_keys)
+      opts
+    end
 
     def ping(worker:, state:, message: nil)
-      return unless has_cronitor?(worker)
+      return unless should_ping?(worker)
 
-      Sidekiq.logger.debug("[cronitor] ping: worker=#{worker.class.name} state=#{state} message=#{message}")
+      Sidekiq.logger.debug("[cronitor] ping: worker=#{job_key(worker)} state=#{state} message=#{message}")
 
-      worker.cronitor.ping(state: state)
+      cronitor(worker).ping(state: state)
     rescue Cronitor::Error => e
-      Sidekiq.logger.error("[cronitor] error during ping: worker=#{worker.class.name} error=#{e.message}")
+      Sidekiq.logger.error("[cronitor] error during ping: worker=#{job_key(worker)} error=#{e.message}")
     rescue => e
-      Sidekiq.logger.error("[cronitor] unexpected error: worker=#{worker.class.name} error=#{e.message}")
+      Sidekiq.logger.error("[cronitor] unexpected error: worker=#{job_key(worker)} error=#{e.message}")
       Sidekiq.logger.error(e.backtrace.first)
     end
 
-    def has_cronitor?(worker)
-      worker.is_a?(Sidekiq::Cronitor) && worker.respond_to?(:cronitor) && !worker.cronitor.api_key.nil?
+    def should_ping?(worker)
+      !cronitor(worker).api_key.nil? && !cronitor_disabled?(worker)
     end
   end
 end
