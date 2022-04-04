@@ -58,9 +58,7 @@ Optional: You can specify the monitor key directly using `sidekiq_options`:
 ```ruby
 class MyJob
   include Sidekiq::Job
-
-  # note that 'key' should be set with a symbol as the key in the hash
-  sidekiq_options cronitor: { key: 'abc123' }
+  sidekiq_options cronitor_key: 'abc123'
 
   def perform
   end
@@ -73,14 +71,29 @@ To disable Cronitor for a specific job you can set the following option:
 ```ruby
 class MyJob
   include Sidekiq::Job
-
-  # note that 'disabled' should be set with a symbol as the key in the hash
-  sidekiq_options cronitor: { disabled: true }
+  sidekiq_options cronitor_disabled: true
 
   def perform
   end
 end
 ```
+
+## Disabling For Some Jobs
+If you have an entire group or category of jobs you wish to disable monitoring on, it's easiest to create a base class with that option set and then have all your jobs inherit from that base class.
+
+```ruby
+  class UnmonitoredJob
+    include Sidekiq::Job
+    sidekiq_options cronitor_disabled: true
+  end
+
+  class NoInstrumentationJob < UnmonitoredJob
+    def perform
+    end
+  end
+```
+
+Note: Do NOT set a cronitor_key option on your base class or all your inherited jobs will report under the same job in Cronitor.
 
 ## Development
 
