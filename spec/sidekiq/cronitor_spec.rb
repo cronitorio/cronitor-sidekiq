@@ -38,13 +38,13 @@ RSpec.describe Sidekiq::Cronitor::ServerMiddleware do
     context "option is set with deprecated method" do
       context "option is set to false" do
         it "should return false" do
-          worker.class.sidekiq_options = { :cronitor => { disabled: false } }
+          worker.class.sidekiq_options = { "cronitor" => { disabled: false } }
           expect(subject.send(:cronitor_disabled?, worker)).to be false
         end
       end
       context "option is set to true" do
         it "should return true" do
-          worker.class.sidekiq_options = { :cronitor => { disabled: true } }
+          worker.class.sidekiq_options = { "cronitor" => { disabled: true } }
           expect(subject.send(:cronitor_disabled?, worker)).to be true
         end
       end
@@ -52,25 +52,25 @@ RSpec.describe Sidekiq::Cronitor::ServerMiddleware do
 
     context "top level option supercedes deprecated method" do
       it "should return true when set" do
-        worker.class.sidekiq_options = { :cronitor => { disabled: false }, :cronitor_disabled => true }
+        worker.class.sidekiq_options = { "cronitor" => { disabled: false }, "cronitor_disabled" => true }
         expect(subject.send(:cronitor_disabled?, worker)).to be true
       end
       it "should return false when set" do
-        worker.class.sidekiq_options = { :cronitor => { disabled: true }, :cronitor_disabled => false }
+        worker.class.sidekiq_options = { "cronitor" => { disabled: true }, "cronitor_disabled" => false }
         expect(subject.send(:cronitor_disabled?, worker)).to be false
       end
     end
 
     context "option is set to false" do
       it "should return false" do
-        worker.class.sidekiq_options = { cronitor_disabled: false }
+        worker.class.sidekiq_options = { "cronitor_disabled" => false }
         expect(subject.send(:cronitor_disabled?, worker)).to be false
       end
     end
 
     context "option is set to true" do
       it "should return true" do
-        worker.class.sidekiq_options = { cronitor_disabled: true }
+        worker.class.sidekiq_options = { "cronitor_disabled" => true }
         expect(subject.send(:cronitor_disabled?, worker)).to be true
       end
     end
@@ -87,21 +87,21 @@ RSpec.describe Sidekiq::Cronitor::ServerMiddleware do
     context "with an explicit key defined" do
       context "with deprecated options" do
         it "should use the key as the job_key" do
-          worker.class.sidekiq_options = { :cronitor => { key: "explicit_key_name" } }
+          worker.class.sidekiq_options = { "cronitor" => { key: "explicit_key_name" } }
           expect(subject.send(:job_key, worker)).to eq "explicit_key_name"
         end
       end
 
       context "with both options set" do
         it "should supercede deprecated method" do
-          worker.class.sidekiq_options = { :cronitor => { key: "explicit_key_name" }, :cronitor_key => "other_name" }
+          worker.class.sidekiq_options = { "cronitor" => { key: "explicit_key_name" }, "cronitor_key" => "other_name" }
           expect(subject.send(:job_key, worker)).to eq "other_name"
         end
       end
 
       context "with top level key set" do
         it "should use the key as the job_key" do
-          worker.class.sidekiq_options = { cronitor_key: "explicit_key_name2" }
+          worker.class.sidekiq_options = { "cronitor_key" => "explicit_key_name2" }
           expect(subject.send(:job_key, worker)).to eq "explicit_key_name2"
         end
       end
@@ -130,14 +130,14 @@ RSpec.describe Sidekiq::Cronitor::ServerMiddleware do
 
       context "with the disable option set to true" do
         it "should return false" do
-          worker.class.sidekiq_options = { cronitor_disabled: true }
+          worker.class.sidekiq_options = { "cronitor_disabled" => true }
           expect(subject.send(:should_ping?, worker)).to be false
         end
       end
 
       context "with the disable option set to false" do
         it "should return true" do
-          worker.class.sidekiq_options = { cronitor_disabled: false }
+          worker.class.sidekiq_options = { "cronitor_disabled" => false }
           expect(subject.send(:should_ping?, worker)).to be true
         end
       end
