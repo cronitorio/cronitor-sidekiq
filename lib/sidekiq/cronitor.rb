@@ -24,7 +24,7 @@ module Sidekiq::Cronitor
     end
 
     def cronitor_disabled?(worker)
-      disabled = worker.class.sidekiq_options.fetch(:cronitor_disabled, nil)
+      disabled = worker.class.sidekiq_options.fetch("cronitor_disabled", nil)
       if disabled.nil?
         options(worker).fetch(:disabled, false)
       else
@@ -33,14 +33,14 @@ module Sidekiq::Cronitor
     end
 
     def job_key(worker)
-      worker.class.sidekiq_options.fetch(:cronitor_key, nil) ||
+      worker.class.sidekiq_options.fetch("cronitor_key", nil) ||
       options(worker).fetch(:key, worker.class.name)
     end
 
     def options(worker)
       # eventually we will delete this method of passing options
       # ultimately we want all cronitor options to be top level keys
-      opts = worker.class.sidekiq_options.fetch(:cronitor, {})
+      opts = worker.class.sidekiq_options.fetch("cronitor", {})
       # symbolize_keys is a rails helper, so only use it if it's defined
       opts = opts.symbolize_keys if opts.respond_to?(:symbolize_keys)
       opts
