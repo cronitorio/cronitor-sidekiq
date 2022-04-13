@@ -3,6 +3,14 @@ require 'cronitor'
 
 require 'sidekiq/cronitor/version'
 
+if defined? SidekiqScheduler
+  require 'sidekiq/cronitor/sidekiq_scheduler'
+end
+
+if defined? Sidekiq::Periodic
+  require 'sidekiq/cronitor/periodic_jobs'
+end
+
 module Sidekiq::Cronitor
   class ServerMiddleware
     def call(worker, message, queue)
