@@ -8,14 +8,7 @@ namespace :cronitor do
   namespace :sidekiq_periodic_jobs do
     desc 'Upload Sidekiq Pro Periodic Jobs to Cronitor'
     task :sync => :environment do
-      monitors_payload = []
-      loops = Sidekiq::Periodic::LoopSet.new
-      loops.each do |lop|
-        job_key = lop.klass.sidekiq_options.fetch("cronitor_key", nil) || lop.klass.to_s
-        cronitor_disabled = lop.klass.sidekiq_options.fetch("cronitor_disabled", false)
-        monitors_payload << {key: job_key, schedule: lop.schedule, metadata: lop.options, platform: 'sidekiq', type: 'job' } unless cronitor_disabled
-      end
-      Cronitor::Monitor.put(monitors: monitors_payload)
+      Sidekiq::Cronitor::PeriodicJobs.sync_schedule!
     end
   end
 end
