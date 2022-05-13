@@ -40,7 +40,7 @@ Cronitor.environment = 'development' #default: 'production'
 ```
 
 
-To monitor jobs insert the server middleware (most people do this in the Sidekiq initializer)
+Monitor jobs by registering `Sidekiq::Cronitor::ServerMiddleware` server [middleware](https://www.rubydoc.info/github/mperham/sidekiq/Sidekiq/Middleware) (most people do this in the Sidekiq initializer).
 
 ```ruby
 Sidekiq.configure_server do |config|
@@ -51,7 +51,7 @@ end
 ```
 
 
-When this job is invoked, Cronitor will send telemetry pings with a `key` matching the name of your job class (`MyJob` in the example below). If no monitor exists it will create one on the first event. You can configure rules at a later time via the Cronitor dashboard, API, or [YAML config](https://github.com/cronitorio/cronitor-ruby#configuring-monitors) file.
+Once the server middleware is registered, Cronitor will send [telemetry events](https://cronitor.io/docs/teleme) with a `key` matching the name of your job class (`MyJob` in the example below). If no monitor exists it will create one on the first event. You can configure rules at a later time via the Cronitor dashboard, API, or [YAML config](https://github.com/cronitorio/cronitor-ruby#configuring-monitors) file.
 
 Optional: You can specify the monitor key directly using `sidekiq_options`:
 
@@ -65,7 +65,6 @@ class MyJob
 end
 ```
 
-
 To disable Cronitor for a specific job you can set the following option:
 
 ```ruby
@@ -78,39 +77,15 @@ class MyJob
 end
 ```
 
-## Disabling For Some Jobs
-If you have an entire group or category of jobs you wish to disable monitoring on, it's easiest to create a base class with that option set and then have all your jobs inherit from that base class.
+## Periodic/Scheduled Jobs
+If you are using Sidekiq Enterprise to run [Periodic Jobs](https://github.com/mperham/sidekiq/wiki/Ent-Periodic-Jobs) or are using the popular [sidekiq-scheduler](https://github.com/moove-it/sidekiq-scheduler) gem, you can sync the schedules of those jobs with a single command.
 
 ```ruby
-  class UnmonitoredJob
-    include Sidekiq::Job
-    sidekiq_options cronitor_disabled: true
-  end
-
-  class NoInstrumentationJob < UnmonitoredJob
-    def perform
-    end
-  end
+Sidekiq::Cronitor::PeriodicJobs.sync_schedule!
+# or
+Sidekiq::Cronitor::SidekiqScheduler.sync_schedule!
 ```
 
-Note: Do NOT set a cronitor_key option on your base class or all your inherited jobs will report under the same job in Cronitor.
-
-## Job Monitoring
-If you are using Cronitor to monitor scheduled/periodic jobs and have jobs schedules already defined you can use rake tasks to upload the schedule to Cronitor for monitoring.
-
-In your projects Rakefile you can load the task to be available to you in your project.
-It might be a good idea to sync these schedules on every deploy
-
-```ruby
-  # your Rakefile, find the path to the gem
-  spec = Gem::Specification.find_by_name 'sidekiq-cronitor'
-  # if you are using sidekiq_scheduler this task should parse and upload the schedule.
-  load "#{spec.gem_dir}/lib/tasks/sidekiq_scheduler.rake"
-  # if you are using Sidekiq Pro Periodic Jobs this is an example script
-  # Note: this hasn't been tested on Sidekiq Pro yet
-  load "#{spec.gem_dir}/lib/tasks/periodic_jobs.rake"
-  # You only really need to load one of the rake files unless you are somehow running both systems
-```
 
 ## Development
 
