@@ -59,7 +59,7 @@ module Sidekiq::Cronitor
 
       Sidekiq.logger.debug("[cronitor] ping: worker=#{job_key(worker)} state=#{state} message=#{message}")
 
-      cronitor(worker).ping(state: state)
+      cronitor(worker).ping(state: state, message: message)
     rescue Cronitor::Error => e
       Sidekiq.logger.error("[cronitor] error during ping: worker=#{job_key(worker)} error=#{e.message}")
     rescue => e
