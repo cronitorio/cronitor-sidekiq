@@ -11,7 +11,14 @@ module Sidekiq::Cronitor
 
         next if lop.klass.constantize.sidekiq_options.fetch('cronitor_disabled', false)
 
-        monitors_payload << { key: job_key, schedule: lop.schedule, metadata: lop.options.to_s, platform: 'sidekiq', type: 'job' }
+        monitors_payload << {
+          key: job_key,
+          schedule: lop.schedule,
+          timezone: lop.tz_name || Time.respond_to?(:zone) && Time.zone.tzinfo.name || nil,
+          metadata: lop.options.to_s,
+          platform: 'sidekiq',
+          type: 'job'
+        }
       end
 
       Cronitor::Monitor.put(monitors: monitors_payload)
