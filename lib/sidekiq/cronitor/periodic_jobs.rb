@@ -6,10 +6,10 @@ module Sidekiq::Cronitor
       monitors_payload = []
       loops = Sidekiq::Periodic::LoopSet.new
       loops.each do |lop|
-        job_key = lop.klass.sidekiq_options.fetch('cronitor_key', lop.klass.to_s)
-        next if lop.klass.sidekiq_options.fetch('cronitor_disabled', false)
+        job_key = lop.klass.constantize.sidekiq_options.fetch('cronitor_key', lop.klass.to_s)
+        next if lop.klass.constantize.sidekiq_options.fetch('cronitor_disabled', false)
 
-        monitors_payload << { key: job_key, schedule: lop.schedule, metadata: lop.options, platform: 'sidekiq', type: 'job' }
+        monitors_payload << { key: job_key, schedule: lop.schedule, metadata: lop.options.to_s, platform: 'sidekiq', type: 'job' }
       end
 
       Cronitor::Monitor.put(monitors: monitors_payload)
