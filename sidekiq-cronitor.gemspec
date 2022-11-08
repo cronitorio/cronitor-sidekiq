@@ -16,7 +16,7 @@ Gem::Specification.new do |spec|
   spec.files         = Dir["README.md", "LICENSE", "lib/**/*.rb"]
   spec.require_paths = ["lib"]
 
-  spec.add_dependency "sidekiq", "~> 6.0"
+  spec.add_dependency "sidekiq", "~> 7.0"
   spec.add_dependency "cronitor", "~> 5.0"
 
   spec.add_development_dependency "bundler", "~> 2.1"
