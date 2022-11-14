@@ -52,12 +52,8 @@ module Sidekiq::Cronitor
         lop.history.find { |j| j[0] == worker.jid }
       end
 
-      case periodic_job&.options
-      when is_a?(String)
-        JSON.parse(periodic_job.options).fetch('cronitor_key', nil)
-      when is_a?(Hash)
-        periodic_job.options.fetch('cronitor_key', nil)
-      end
+      periodic_job.options = JSON.parse(periodic_job.options) if periodic_job&.options.is_a?(String)
+      periodic_job&.options.fetch('cronitor_key', nil)
     end
 
     def options(worker)
