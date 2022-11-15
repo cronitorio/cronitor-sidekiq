@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    sidekiq-cronitor (3.4.0)
+    sidekiq-cronitor (3.5.0)
       cronitor (~> 5.0)
       sidekiq (~> 6.0)
 
