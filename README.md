@@ -3,8 +3,6 @@
 [Cronitor](https://cronitor.io/) provides dead simple monitoring for cron jobs, daemons, queue workers, websites, APIs, and anything else that can send or receive an HTTP request. The Cronitor Sidekiq library provides a drop in integration for monitoring any Sidekiq Job.
 
 
-#### NOTE: Version 3.0.0 changes the integration method from 2.x.x - you now add  middleware in the Sidekiq initializer. This significantly reduces the integration overhead, however it is a BREAKING CHANGE.  Existing users who would like to migrate to version 3.x.x should [contact support](mailto:support@cronitor.io) for assistance with the migration.
-
 ## Installation
 
 Add sidekiq-cronitor your application's Gemfile, near sidekiq:
