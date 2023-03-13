@@ -75,6 +75,31 @@ class MyJob
 end
 ```
 
+To disable Cronitor for all jobs, and selectively enable it, you an set the following:
+
+```sh
+export CRONITOR_AUTO_DISCOVER_SIDEKIQ='false'
+```
+
+or
+
+```ruby
+require 'cronitor'
+Cronitor.auto_discover_sidekiq = false
+```
+
+then enable the jobs you want to report to Cronitor:
+
+```ruby
+class MyJob
+  include Sidekiq::Job
+  sidekiq_options cronitor_enabled: true
+
+  def perform
+  end
+end
+```
+
 ## Periodic/Scheduled Jobs
 If you are using Sidekiq Enterprise to run [Periodic Jobs](https://github.com/mperham/sidekiq/wiki/Ent-Periodic-Jobs) or are using the popular [sidekiq-scheduler](https://github.com/moove-it/sidekiq-scheduler) gem, you can sync the schedules of those jobs with a single command.
 
