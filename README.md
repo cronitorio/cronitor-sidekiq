@@ -75,7 +75,7 @@ class MyJob
 end
 ```
 
-To disable Cronitor for all jobs, and selectively enable it, you an set the following:
+To disable Cronitor for all jobs, and selectively enable it, you can set the following option:
 
 ```sh
 export CRONITOR_AUTO_DISCOVER_SIDEKIQ='false'
