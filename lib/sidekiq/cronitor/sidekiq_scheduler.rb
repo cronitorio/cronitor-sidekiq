@@ -12,6 +12,7 @@ module Sidekiq::Cronitor
         # just in case an explicit job key has been set
         job_klass = Object.const_get(v['class'])
         job_key = job_klass.sidekiq_options.fetch('cronitor_key', v['class'])
+        next if !Cronitor.auto_discover_sidekiq && !job_klass.sidekiq_options.fetch('cronitor_enabled', false)
         next if job_klass.sidekiq_options.fetch('cronitor_disabled', false)
 
         monitors_payload << { key: job_key.to_s, schedule: schedule, platform: 'sidekiq', type: 'job' }
