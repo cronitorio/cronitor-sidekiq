@@ -44,8 +44,18 @@ module Sidekiq::Cronitor
     end
 
     def job_key(worker)
-      worker.class.sidekiq_options.fetch("cronitor_key", nil) ||
-      options(worker).fetch(:key, worker.class.name)
+      periodic_job_key(worker) || worker.class.sidekiq_options.fetch('cronitor_key', nil) ||
+        options(worker).fetch(:key, worker.class.name)
+    end
+
+    def periodic_job_key(worker)
+      return unless defined?(Sidekiq::Periodic)
+
+      periodic_job = Sidekiq::Periodic::LoopSet.new.find do |lop|
+        lop.history.find { |j| j[0] == worker.jid }
+      end
+
+      periodic_job.present? && periodic_job.options.fetch('cronitor_key', nil)
     end
 
     def options(worker)
@@ -62,7 +72,7 @@ module Sidekiq::Cronitor
 
       Sidekiq.logger.debug("[cronitor] ping: worker=#{job_key(worker)} state=#{state} message=#{message}")
 
-      cronitor(worker).ping(state: state)
+      cronitor(worker).ping(state: state, message: message)
     rescue Cronitor::Error => e
       Sidekiq.logger.error("[cronitor] error during ping: worker=#{job_key(worker)} error=#{e.message}")
     rescue => e

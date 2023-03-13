@@ -5,8 +5,8 @@ require "sidekiq/cronitor/version"
 Gem::Specification.new do |spec|
   spec.name          = "sidekiq-cronitor"
   spec.version       = Sidekiq::Cronitor::VERSION
-  spec.authors       = ["Zeke Gabrielse", "Samuel Cochran"]
-  spec.email         = ["zeke@keygen.sh", "sj26@sj26.com"]
+  spec.authors       = ["Zeke Gabrielse", "Samuel Cochran", "Kevin Tom", "August Flanagan"]
+  spec.email         = ["zeke@keygen.sh", "sj26@sj26.com", "kevin.tom@gmail.com", "august@cronitor.io"]
 
   spec.summary       = %q{Monitor your Sidekiq jobs with Cronitor}
   spec.description   = %q{Integrates Sidekiq with Cronitor so that workers send lifecycle events - run/complete/fail - around their perform methods}
@@ -16,8 +16,8 @@ Gem::Specification.new do |spec|
   spec.files         = Dir["README.md", "LICENSE", "lib/**/*.rb"]
   spec.require_paths = ["lib"]
 
-  spec.add_dependency "sidekiq", "~> 6.0"
-  spec.add_dependency "cronitor", "~> 4.0"
+  spec.add_dependency "sidekiq", "< 8"
+  spec.add_dependency "cronitor", "~> 5.0"
 
   spec.add_development_dependency "bundler", "~> 2.1"
   spec.add_development_dependency "rake", "~> 13.0"
