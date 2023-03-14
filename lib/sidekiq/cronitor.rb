@@ -33,10 +33,10 @@ module Sidekiq::Cronitor
     end
 
     def cronitor_disabled?(worker)
-      if Cronitor.auto_discover_sidekiq
-        worker.class.sidekiq_options.fetch("cronitor_disabled", options(worker).fetch(:disabled, false))
+      if worker.class.sidekiq_options["cronitor_enabled"]
+        !worker.class.sidekiq_options.fetch("cronitor_enabled", Cronitor.auto_discover_sidekiq)
       else
-        !worker.class.sidekiq_options.fetch("cronitor_enabled", false)
+        worker.class.sidekiq_options.fetch("cronitor_disabled", options(worker).fetch(:disabled, !Cronitor.auto_discover_sidekiq))
       end
     end
 
