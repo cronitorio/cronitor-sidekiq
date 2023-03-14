@@ -2,11 +2,11 @@ on:
   pull_request:
     branches:
       - $default-branch
-    paths:
-      - lib/**
-      - spec/**
-      - Gemfile.lock
-      - '*.gemspec'
+    # paths:
+    #  - lib/**
+    #  - spec/**
+    #  - Gemfile.lock
+    #  - '*.gemspec'
 
 name: Tests
 jobs:
