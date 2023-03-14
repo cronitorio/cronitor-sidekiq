@@ -2,7 +2,6 @@
 
 [Cronitor](https://cronitor.io/) provides dead simple monitoring for cron jobs, daemons, queue workers, websites, APIs, and anything else that can send or receive an HTTP request. The Cronitor Sidekiq library provides a drop in integration for monitoring any Sidekiq Job.
 
-
 ## Installation
 
 Add sidekiq-cronitor your application's Gemfile, near sidekiq:
@@ -14,7 +13,7 @@ gem 'sidekiq-cronitor'
 
 And then bundle:
 
-```
+```sh
 bundle
 ```
 
@@ -37,7 +36,6 @@ Cronitor.api_key = 'api_key_123'
 Cronitor.environment = 'development' #default: 'production'
 ```
 
-
 Monitor jobs by registering `Sidekiq::Cronitor::ServerMiddleware` server [middleware](https://www.rubydoc.info/github/mperham/sidekiq/Sidekiq/Middleware) (most people do this in the Sidekiq initializer).
 
 ```ruby
@@ -47,7 +45,6 @@ Sidekiq.configure_server do |config|
   end
 end
 ```
-
 
 Once the server middleware is registered, Cronitor will send [telemetry events](https://cronitor.io/docs/teleme) with a `key` matching the name of your job class (`MyJob` in the example below). If no monitor exists it will create one on the first event. You can configure rules at a later time via the Cronitor dashboard, API, or [YAML config](https://github.com/cronitorio/cronitor-ruby#configuring-monitors) file.
 
@@ -63,6 +60,8 @@ class MyJob
 end
 ```
 
+### Enable/Disable
+
 To disable Cronitor for a specific job you can set the following option:
 
 ```ruby
@@ -75,7 +74,33 @@ class MyJob
 end
 ```
 
+To disable Cronitor for all jobs, and selectively enable it, you can set the following option:
+
+```sh
+export CRONITOR_AUTO_DISCOVER_SIDEKIQ='false'
+```
+
+or
+
+```ruby
+require 'cronitor'
+Cronitor.auto_discover_sidekiq = false
+```
+
+then enable the jobs you want to report to Cronitor:
+
+```ruby
+class MyJob
+  include Sidekiq::Job
+  sidekiq_options cronitor_enabled: true
+
+  def perform
+  end
+end
+```
+
 ## Periodic/Scheduled Jobs
+
 If you are using Sidekiq Enterprise to run [Periodic Jobs](https://github.com/mperham/sidekiq/wiki/Ent-Periodic-Jobs) or are using the popular [sidekiq-scheduler](https://github.com/moove-it/sidekiq-scheduler) gem, you can sync the schedules of those jobs with a single command.
 
 ```ruby
@@ -83,7 +108,6 @@ Sidekiq::Cronitor::PeriodicJobs.sync_schedule!
 # or
 Sidekiq::Cronitor::SidekiqScheduler.sync_schedule!
 ```
-
 
 ## Development
 
@@ -93,7 +117,7 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/cronitorio/cronitor-sidekiq/pulls. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
+Bug reports and pull requests are welcome on GitHub at <https://github.com/cronitorio/cronitor-sidekiq/pulls>. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
 
 ## License
 
