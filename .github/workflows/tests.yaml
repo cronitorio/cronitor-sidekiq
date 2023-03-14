@@ -3,10 +3,10 @@ on:
     branches:
       - $default-branch
     paths:
-      - lib/**
-      - spec/**
-      - Gemfile.lock
-      - '*.gemspec'
+      - /lib/**
+      - /spec/**
+      - /Gemfile.lock
+      - /*.gemspec
 
 name: Tests
 jobs:
