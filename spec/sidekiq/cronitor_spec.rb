@@ -74,6 +74,22 @@ RSpec.describe Sidekiq::Cronitor::ServerMiddleware do
         expect(subject.send(:cronitor_disabled?, worker)).to be true
       end
     end
+
+    context "cronitor_enabled is set to true" do
+      it "should return false" do
+        worker.class.sidekiq_options = { "cronitor_enabled" => true }
+        expect(subject.send(:cronitor_disabled?, worker)).to be false
+      end
+    end
+
+    context "Cronitor.auto_discover_sidekiq is set to false" do
+      it "should return true" do
+        Cronitor.auto_discover_sidekiq = false
+        worker.class.sidekiq_options = {}
+        expect(subject.send(:cronitor_disabled?, worker)).to be true
+        Cronitor.auto_discover_sidekiq = true # reset to default
+      end
+    end
   end
 
   describe "#job_key" do
