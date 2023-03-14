@@ -6,7 +6,7 @@ module Sidekiq::Cronitor
       monitors_payload = []
       loops = Sidekiq::Periodic::LoopSet.new
       loops.each do |lop|
-        if fetch_option(lop, 'cronitor_enabled')
+        if lop.options.has_key?('cronitor_enabled') || lop.klass.constantize.sidekiq_options.has_key?('cronitor_enabled')
           next unless fetch_option(lop, 'cronitor_enabled', Cronitor.auto_discover_sidekiq)
         else
           next if fetch_option(lop, 'cronitor_disabled', !Cronitor.auto_discover_sidekiq)
