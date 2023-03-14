@@ -1,5 +1,7 @@
 # Sidekiq Cronitor
 
+![Tests](https://github.com/cronitorio/cronitor-sidekiq/workflows/Tests/badge.svg)
+
 [Cronitor](https://cronitor.io/) provides dead simple monitoring for cron jobs, daemons, queue workers, websites, APIs, and anything else that can send or receive an HTTP request. The Cronitor Sidekiq library provides a drop in integration for monitoring any Sidekiq Job.
 
 ## Installation
