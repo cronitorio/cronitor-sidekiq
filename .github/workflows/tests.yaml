@@ -5,11 +5,6 @@ on:
   pull_request:
     branches:
       - master
-    paths:
-      - /lib/**/*
-      - /spec/**/*
-      - /Gemfile.lock
-      - /*.gemspec
 
 name: Tests
 jobs:
