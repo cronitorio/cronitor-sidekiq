@@ -6,8 +6,8 @@ on:
     branches:
       - master
     paths:
-      - /lib/**
-      - /spec/**
+      - /lib/**/*
+      - /spec/**/*
       - /Gemfile.lock
       - /*.gemspec
 
