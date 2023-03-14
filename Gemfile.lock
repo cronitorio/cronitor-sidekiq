@@ -19,7 +19,7 @@ GEM
       multi_xml (>= 0.5.2)
     mini_mime (1.1.2)
     multi_xml (0.6.0)
-    rack (3.0.4.1)
+    rack (3.0.4.2)
     rake (13.0.1)
     redis-client (0.12.1)
       connection_pool
