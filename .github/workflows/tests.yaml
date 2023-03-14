@@ -1,7 +1,7 @@
 on:
   pull_request:
     branches:
-      - $default-branch
+      - master
     paths:
       - /lib/**
       - /spec/**
