@@ -6,7 +6,7 @@ module Sidekiq::Cronitor
       monitors_payload = []
       loops = Sidekiq::Periodic::LoopSet.new
       loops.each do |lop|
-        if lop.options.has_key?('cronitor_enabled') || Object.const_get(lop.klass).sidekiq_options.has_key?('cronitor_enabled')
+        if parsed_options(lop).has_key?('cronitor_enabled') || Object.const_get(lop.klass).sidekiq_options.has_key?('cronitor_enabled')
           next unless fetch_option(lop, 'cronitor_enabled', Cronitor.auto_discover_sidekiq)
         else
           next if fetch_option(lop, 'cronitor_disabled', !Cronitor.auto_discover_sidekiq)
@@ -29,8 +29,16 @@ module Sidekiq::Cronitor
       Sidekiq.logger.error("[cronitor] error during #{name}.#{__method__}: #{e}")
     end
 
+    def self.parsed_options(lop)
+      if lop.options.is_a?(String)
+        JSON.parse(lop.options)
+      else
+        lop.options
+      end
+    end
+
     def self.fetch_option(lop, key, default = nil)
-      lop.options.fetch(key, default) ||
+      parsed_options(lop).fetch(key, default) ||
         Object.const_get(lop.klass).sidekiq_options.fetch(key, default)
     end
   end
