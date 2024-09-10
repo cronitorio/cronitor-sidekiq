@@ -13,13 +13,23 @@ module Sidekiq::Cronitor
         end
 
         monitors_payload << {
-          key: fetch_option(lop, 'cronitor_key') || lop.klass.to_s,
-          group: fetch_option(lop, 'cronitor_group'),
+          assertions: fetch_option(lop, 'cronitor_assertions'),
+          consecutive_alert_threshold: fetch_option(lop, 'cronitor_consecutive_alert_threshold')&.to_i,
+          failure_tolerance: fetch_option(lop, 'cronitor_failure_tolerance')&.to_i,
           grace_seconds: fetch_option(lop, 'cronitor_grace_seconds')&.to_i,
-          schedule: lop.schedule,
-          timezone: lop.tz_name || Time.respond_to?(:zone) && Time.zone.tzinfo.name || nil,
+          group: fetch_option(lop, 'cronitor_group'),
+          key: fetch_option(lop, 'cronitor_key') || lop.klass.to_s,
           metadata: lop.options.to_s,
+          name: fetch_option(lop, 'cronitor_name'),
+          note: fetch_option(lop, 'cronitor_note'),
+          notify: fetch_option(lop, 'cronitor_notify'),
+          paused: fetch_option(lop, 'cronitor_paused'),
           platform: 'sidekiq',
+          realert_interval: fetch_option(lop, 'cronitor_realert_interval'),
+          schedule: lop.schedule,
+          schedule_tolerance: fetch_option(lop, 'cronitor_schedule_tolerance')&.to_i,
+          tags: fetch_option(lop, 'cronitor_tags'),
+          timezone: lop.tz_name || Time.respond_to?(:zone) && Time.zone.tzinfo.name || nil,
           type: 'job'
         }.compact
       end
