@@ -13,76 +13,63 @@ end
 
 module Sidekiq::Cronitor
   class ServerMiddleware
-    def call(worker, message, queue)
-      ping(worker: worker, state: 'run')
+    # @param [Object] worker the instance of the job that was queued
+    # @param [Hash] job_payload the full job payload
+    #   * @see https://github.com/sidekiq/sidekiq/wiki/Job-Format
+    # @param [String] queue the name of the queue the job was pulled from
+    # @yield the next middleware in the chain or worker `perform` method
+    def call(worker, job_payload, queue)
+      ping(job_payload: job_payload, state: 'run')
 
       result = yield
     rescue => e
-      ping(worker: worker, state: 'fail', message: e.to_s)
+      ping(job_payload: job_payload, state: 'fail', message: e.to_s)
 
       raise e
     else
-      ping(worker: worker, state: 'complete')
+      ping(job_payload: job_payload, state: 'complete')
       result # to be consistent with client middleware, return results of yield
     end
 
     private
 
-    def cronitor(worker)
-      Cronitor::Monitor.new(job_key(worker))
+    def cronitor(job_payload)
+      Cronitor::Monitor.new(job_key(job_payload))
     end
 
-    def cronitor_disabled?(worker)
-      if worker.class.sidekiq_options.has_key?("cronitor_enabled")
-        !worker.class.sidekiq_options.fetch("cronitor_enabled", Cronitor.auto_discover_sidekiq)
+    def cronitor_disabled?(job_payload)
+      if job_payload.has_key?("cronitor_enabled")
+        !job_payload.fetch("cronitor_enabled", Cronitor.auto_discover_sidekiq)
       else
-        worker.class.sidekiq_options.fetch("cronitor_disabled", options(worker).fetch(:disabled, !Cronitor.auto_discover_sidekiq))
+        job_payload.fetch("cronitor_disabled", options(job_payload).fetch("disabled", !Cronitor.auto_discover_sidekiq))
       end
     end
 
-    def job_key(worker)
-      periodic_job_key(worker) || worker.class.sidekiq_options.fetch('cronitor_key', nil) ||
-        options(worker).fetch(:key, worker.class.name)
+    def job_key(job_payload)
+      job_payload['cronitor_key'] || options(job_payload)['key'] || job_payload['class']
     end
 
-    def periodic_job_key(worker)
-      return unless defined?(Sidekiq::Periodic)
-
-      periodic_job = Sidekiq::Periodic::LoopSet.new.find do |lop|
-        lop.history.find { |j| j[0] == worker.jid }
-      end
-
-      if periodic_job.present?
-        options = periodic_job.options
-        options = JSON.parse(options) if options.is_a?(String)
-        options.fetch('cronitor_key', nil)
-      end
-    end
-
-    def options(worker)
+    def options(job_payload)
       # eventually we will delete this method of passing options
       # ultimately we want all cronitor options to be top level keys
-      opts = worker.class.sidekiq_options.fetch("cronitor", {})
-      # symbolize_keys is a rails helper, so only use it if it's defined
-      opts = opts.symbolize_keys if opts.respond_to?(:symbolize_keys)
-      opts
+      job_payload.fetch("cronitor", {})
     end
 
-    def ping(worker:, state:, message: nil)
-      return unless should_ping?(worker)
+    def ping(job_payload:, state:, message: nil)
+      return unless should_ping?(job_payload)
 
-      Sidekiq.logger.debug("[cronitor] ping: worker=#{job_key(worker)} state=#{state} message=#{message}")
+      Sidekiq.logger.debug("[cronitor] ping: worker=#{job_key(job_payload)} state=#{state} message=#{message}")
 
-      cronitor(worker).ping(state: state, message: message)
+      cronitor(job_payload).ping(state: state, message: message)
     rescue Cronitor::Error => e
-      Sidekiq.logger.error("[cronitor] error during ping: worker=#{job_key(worker)} error=#{e.message}")
+      Sidekiq.logger.error("[cronitor] error during ping: worker=#{job_key(job_payload)} error=#{e.message}")
     rescue => e
-      Sidekiq.logger.error("[cronitor] unexpected error: worker=#{job_key(worker)} error=#{e.message}")
+      Sidekiq.logger.error("[cronitor] unexpected error: worker=#{job_key(job_payload)} error=#{e.message}")
       Sidekiq.logger.error(e.backtrace.first)
     end
 
-    def should_ping?(worker)
-      !cronitor(worker).api_key.nil? && !cronitor_disabled?(worker)
+    def should_ping?(job_payload)
+      !cronitor(job_payload).api_key.nil? && !cronitor_disabled?(job_payload)
     end
   end
 end
