@@ -57,8 +57,7 @@ module Sidekiq::Cronitor
     end
 
     def self.fetch_option(lop, key, default = nil)
-      parsed_options(lop)[key] ||
-        Object.const_get(lop.klass).sidekiq_options.fetch(key, default)
+      parsed_options(lop).fetch(key, Object.const_get(lop.klass).sidekiq_options.fetch(key, default))
     end
   end
 end

@@ -31,6 +31,7 @@ RSpec.describe Sidekiq::Cronitor::PeriodicJobs do
     end
 
     context "when job options are stringified JSON" do
+      let(:other_job_options) { {} }
       let(:job) {
         instance_double(
           "Sidekiq::Periodic::Loop",
@@ -39,13 +40,22 @@ RSpec.describe Sidekiq::Cronitor::PeriodicJobs do
           tz_name: "Etc/UTC",
           options: {
             "cronitor_key" => cronitor_key,
-            "cronitor_group" => "dummy-team"
+            "cronitor_group" => "dummy-team",
+            **other_job_options
           }.to_json
         )
       }
       it "updates monitors" do
         expect(Cronitor::Monitor).to receive(:put).with(monitors: [hash_including(key: cronitor_key)])
         described_class.sync_schedule!
+      end
+
+      context "with a false option value" do
+        let(:other_job_options) { { cronitor_paused: false } }
+        it "sends it as false" do
+          expect(Cronitor::Monitor).to receive(:put).with(monitors: [hash_including(paused: false)])
+          described_class.sync_schedule!
+        end
       end
     end
 
