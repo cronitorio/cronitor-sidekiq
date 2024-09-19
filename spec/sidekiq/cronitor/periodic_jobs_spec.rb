@@ -57,6 +57,14 @@ RSpec.describe Sidekiq::Cronitor::PeriodicJobs do
           described_class.sync_schedule!
         end
       end
+
+      context "when cronitor_sync_disabled: true" do
+        let(:other_job_options) { { cronitor_sync_disabled: true } }
+        it "does not sync schedule" do
+          expect(Cronitor::Monitor).to receive(:put).with(monitors: [])
+          described_class.sync_schedule!
+        end
+      end
     end
 
     context "when job options are a hash" do
