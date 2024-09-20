@@ -3,7 +3,7 @@
 module Sidekiq::Cronitor
   class PeriodicJobs
 
-    def self.sync_schedule!
+    def self.sync_schedule!(timeout: nil)
       monitors_payload = []
       loops = Sidekiq::Periodic::LoopSet.new
       loops.each do |lop|
@@ -40,7 +40,7 @@ module Sidekiq::Cronitor
         monitors_payload << monitor_payload
       end
 
-      Cronitor::Monitor.put(monitors: monitors_payload)
+      Cronitor::Monitor.put(monitors: monitors_payload, timeout: timeout)
     rescue Cronitor::Error => e
       Sidekiq.logger.error("[cronitor] error during #{name}.#{__method__}: #{e}")
     end
