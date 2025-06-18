@@ -21,7 +21,7 @@ bundle
 
 ## Usage
 
-Configure `sidekiq-cronitor` with an [API Key](https://cronitor.io/docs/api-overview) from [your settings](https://cronitor.io/settings). You can use ENV variables to configure Cronitor:
+Configure `sidekiq-cronitor` with an [API Key](https://cronitor.io/docs/api) from [your settings](https://cronitor.io/settings). You can use ENV variables to configure Cronitor:
 
 ```sh
 export CRONITOR_API_KEY='api_key_123'
